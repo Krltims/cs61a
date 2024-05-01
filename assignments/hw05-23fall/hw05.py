@@ -1,7 +1,7 @@
 def hailstone(n):
     """Q1: Yields the elements of the hailstone sequence starting at n.
        At the end of the sequence, yield 1 infinitely.
-
+    "test"
     >>> hail_gen = hailstone(10)
     >>> [next(hail_gen) for _ in range(10)]
     [10, 5, 16, 8, 4, 2, 1, 1, 1, 1]
