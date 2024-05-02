@@ -178,7 +178,7 @@ class ThrowerAnt(Ant):
     implemented = True
     damage = 1
     food_cost=3
-    lower_bound=-1
+    lower_bound=0
     upper_bound=float('inf')
     # ADD/OVERRIDE CLASS ATTRIBUTES HERE
 
@@ -283,10 +283,33 @@ class FireAnt(Ant):
 
 # BEGIN Problem 6
 # The WallAnt class
+class WallAnt(Ant):
+    name='Wall'
+    implemented = True
+    food_cost=4
+    def __init__(self,health=4):
+        super().__init__(health)
 # END Problem 6
-
 # BEGIN Problem 7
 # The HungryAnt Class
+class HungryAnt(ThrowerAnt):
+    name='Hungry'
+    implemented = True
+    food_cost=4
+    chewing_turns=3
+    lower_bound=0
+    upper_bound=0
+    def __init__(self,health=1):
+        self.turns_to_chew=0
+        super().__init__(health)
+    def action(self, gamestate):
+        if self.turns_to_chew==0:
+            bee=random_bee(self.place.bees)
+            if bee is not None:
+                self.turns_to_chew=self.chewing_turns
+                bee.reduce_health(bee.health)
+        else:
+            self.turns_to_chew-=1
 # END Problem 7
 
 
