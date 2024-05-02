@@ -178,6 +178,8 @@ class ThrowerAnt(Ant):
     implemented = True
     damage = 1
     food_cost=3
+    lower_bound=-1
+    upper_bound=float('inf')
     # ADD/OVERRIDE CLASS ATTRIBUTES HERE
 
     def nearest_bee(self):
@@ -188,11 +190,14 @@ class ThrowerAnt(Ant):
         """
         # BEGIN Problem 3 and 4
         place=self.place
+        start=0
         while place.is_hive != True:
             bee=random_bee(place.bees)
-            if bee:
+            print("DEBUG:",self.lower_bound,start,self.upper_bound,"BEE:",bee)
+            if bee and self.lower_bound<=start<=self.upper_bound:
                 return bee
             place=place.entrance# REPLACE THIS LINE
+            start+=1
         return None
         # END Problem 3 and 4
 
@@ -223,9 +228,10 @@ class ShortThrower(ThrowerAnt):
 
     name = 'Short'
     food_cost = 2
+    upper_bound=3
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True # Change to True to view in the GUI
     # END Problem 4
 
 
@@ -236,7 +242,8 @@ class LongThrower(ThrowerAnt):
     food_cost = 2
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    lower_bound=5
     # END Problem 4
 
 
@@ -248,7 +255,7 @@ class FireAnt(Ant):
     food_cost = 5
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 5
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem 5
 
     def __init__(self, health=3):
@@ -263,7 +270,15 @@ class FireAnt(Ant):
         the additional damage if the fire ant dies.
         """
         # BEGIN Problem 5
-        "*** YOUR CODE HERE ***"
+        place=self.place
+        bee=place.bees[:]
+        if self.health<=amount:
+            for i in bee:
+                i.reduce_health(amount+self.damage)
+        else:
+            for i in bee:
+                i.reduce_health(amount)
+        super().reduce_health(amount)
         # END Problem 5
 
 # BEGIN Problem 6
