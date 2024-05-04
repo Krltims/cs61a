@@ -52,6 +52,7 @@ class Insect:
     """An Insect, the base class of Ant and Bee, has health and a Place."""
 
     damage = 0
+    is_waterproof=0
     # ADD CLASS ATTRIBUTES HERE
 
     def __init__(self, health, place=None):
@@ -105,6 +106,7 @@ class Ant(Insect):
     implemented = False  # Only implemented Ant classes should be instantiated
     food_cost = 0
     is_container = False
+    last_turn=-1
     # ADD CLASS ATTRIBUTES HERE
 
     def __init__(self, health=1):
@@ -133,7 +135,13 @@ class Ant(Insect):
             place.ant = self
         else:
             # BEGIN Problem 8b
-            assert place.ant is None, 'Two ants in {0}'.format(place)
+            '''print("DEBUG:",self.can_contain(place.ant),place.ant.can_contain(self))'''
+            assert ((self.can_contain(place.ant)) or (place.ant.can_contain(self))), 'Two ants in {0}'.format(place)
+            if place.ant.is_container and place.ant.can_contain(self):
+                place.ant.store_ant(self)
+            elif self.is_container and self.can_contain(place.ant):
+                self.store_ant(place.ant)
+                place.ant=self
             # END Problem 8b
         Insect.add_to(self, place)
 
@@ -150,6 +158,9 @@ class Ant(Insect):
         """Double this ants's damage, if it has not already been doubled."""
         # BEGIN Problem 12
         "*** YOUR CODE HERE ***"
+        if self.last_turn==-1:
+            self.damage*=2
+        self.last_turn=1
         # END Problem 12
 
 
@@ -159,6 +170,7 @@ class HarvesterAnt(Ant):
     name = 'Harvester'
     implemented = True
     food_cost=2
+    
     # OVERRIDE CLASS ATTRIBUTES HERE
 
     def action(self, gamestate):
@@ -193,7 +205,7 @@ class ThrowerAnt(Ant):
         start=0
         while place.is_hive != True:
             bee=random_bee(place.bees)
-            print("DEBUG:",self.lower_bound,start,self.upper_bound,"BEE:",bee)
+            '''print("DEBUG:",self.lower_bound,start,self.upper_bound,"BEE:",bee)'''
             if bee and self.lower_bound<=start<=self.upper_bound:
                 return bee
             place=place.entrance# REPLACE THIS LINE
@@ -325,12 +337,14 @@ class ContainerAnt(Ant):
 
     def can_contain(self, other):
         # BEGIN Problem 8a
-        "*** YOUR CODE HERE ***"
+        if self.ant_contained is None and other.is_container is False:
+            return True
+        return False
         # END Problem 8a
 
     def store_ant(self, ant):
         # BEGIN Problem 8a
-        "*** YOUR CODE HERE ***"
+        self.ant_contained=ant
         # END Problem 8a
 
     def remove_ant(self, ant):
@@ -350,7 +364,11 @@ class ContainerAnt(Ant):
 
     def action(self, gamestate):
         # BEGIN Problem 8a
-        "*** YOUR CODE HERE ***"
+        if self.ant_contained is not None:
+            self.ant_contained.action(gamestate)
+        '''if self.place is not None and self.place.bees != [] :
+            for i in self.place.bees:
+                i.action(gamestate)'''
         # END Problem 8a
 
 
@@ -361,11 +379,26 @@ class BodyguardAnt(ContainerAnt):
     food_cost = 4
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 8c
-    implemented = False   # Change to True to view in the GUI
+    def __init__(self,health=2):
+        super().__init__(health)
+    implemented = True   # Change to True to view in the GUI
     # END Problem 8c
 
 # BEGIN Problem 9
 # The TankAnt class
+class TankAnt(ContainerAnt):
+    name='Tank'
+    food_cost=6
+    damage=1
+    implemented=True
+    def __init__(self,health=2):
+        super().__init__(health)
+    def action(self,gamestate):
+        if self.ant_contained is not None:
+            self.ant_contained.action(gamestate)
+        for i in self.place.bees[:]:
+            i.reduce_health(self.damage)
+                
 # END Problem 9
 
 
@@ -376,15 +409,22 @@ class Water(Place):
         """Add an Insect to this place. If the insect is not waterproof, reduce
         its health to 0."""
         # BEGIN Problem 10
-        "*** YOUR CODE HERE ***"
+        super().add_insect(insect)
+        if insect.is_waterproof ==0:
+            insect.reduce_health(insect.health)
         # END Problem 10
 
 # BEGIN Problem 11
 # The ScubaThrower class
+class ScubaThrower(ThrowerAnt):
+    food_cost=6
+    name='Scuba'
+    implemented=True
+    is_waterproof=1
 # END Problem 11
 
 # BEGIN Problem 12
-class QueenAnt(Ant):  # You should change this line
+class QueenAnt(ScubaThrower):  # You should change this line
 # END Problem 12
     """QueenAnt is a ScubaThrower that boosts the damage of all ants behind her."""
 
@@ -392,7 +432,7 @@ class QueenAnt(Ant):  # You should change this line
     food_cost = 7
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 12
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem 12
 
     def action(self, gamestate):
@@ -400,7 +440,15 @@ class QueenAnt(Ant):  # You should change this line
         in her tunnel.
         """
         # BEGIN Problem 12
-        "*** YOUR CODE HERE ***"
+        self.throw_at(self.nearest_bee())
+        beh=self.place.exit
+        while beh is not None:
+            ant0=beh.ant
+            if ant0 is not None:
+                Ant.double(ant0)
+                if ant0.is_container and ant0.ant_contained is not None:
+                    Ant.double(ant0.ant_contained)
+            beh=beh.exit
         # END Problem 12
 
     def reduce_health(self, amount):
@@ -408,12 +456,14 @@ class QueenAnt(Ant):  # You should change this line
         remaining, signal the end of the game.
         """
         # BEGIN Problem 12
-        "*** YOUR CODE HERE ***"
+        self.health-=amount
+        if self.health<=0:
+            ants_lose()
         # END Problem 12
 
     def remove_from(self, place):
         # BEGIN Problem 12
-        "*** YOUR CODE HERE ***"
+        return
         # END Problem 12
 
 
@@ -432,6 +482,7 @@ class Bee(Insect):
 
     name = 'Bee'
     damage = 1
+    is_waterproof=1
     # OVERRIDE CLASS ATTRIBUTES HERE
 
     def sting(self, ant):
