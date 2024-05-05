@@ -1,4 +1,4 @@
-passphrase = '*** PASSPHRASE HERE ***'
+passphrase = '083405e24afb7fe627c935f5c078cd7273590b80c691569b86d6bc03'
 
 def midsem_survey(p):
     """
@@ -48,6 +48,35 @@ class VendingMachine:
     'Here is your soda.'
     """
     "*** YOUR CODE HERE ***"
+    def __init__(self,name,price):
+        self.name=name
+        self.price=price
+        self.stock=0
+        self.balance=0
+    def vend(self):
+        if self.stock==0:
+            return f'Nothing left to vend. Please restock.'
+        amount1=self.balance//self.price
+        rest1=self.balance%self.price
+        if amount1==0:
+            return f'Please add ${self.price-self.balance} more funds.'
+        elif rest1==0:
+            self.balance-=self.price
+            self.stock-=1
+            return f'Here is your {self.name}.'
+        else:
+            self.balance=self.balance-(self.price+rest1)
+            self.stock-=1
+            return f'Here is your {self.name} and ${rest1} change.'
+    def add_funds(self,money):
+        if self.stock==0:
+            return f'Nothing left to vend. Please restock. Here is your ${money}.'
+        else:
+            self.balance+=money
+            return f'Current balance: ${self.balance}'
+    def restock(self,amounts):
+        self.stock+=amounts
+        return f'Current {self.name} stock: {self.stock}'
 
 
 def store_digits(n):
@@ -68,6 +97,11 @@ def store_digits(n):
     >>> print("Do not use str or reversed!") if any([r in cleaned for r in ["str", "reversed"]]) else None
     """
     "*** YOUR CODE HERE ***"
+    result=Link.empty
+    while n>0:
+        result=Link(n%10,result)
+        n=n//10
+    return result
 
 
 def deep_map_mut(func, lnk):
@@ -90,7 +124,13 @@ def deep_map_mut(func, lnk):
     <9 <16> 25 36>
     """
     "*** YOUR CODE HERE ***"
-
+    if lnk is Link.empty:
+        return
+    if isinstance(lnk.first,Link):
+        deep_map_mut(func,lnk.first)
+    else:
+        lnk.first=func(lnk.first)
+    deep_map_mut(func,lnk.rest)
 
 def two_list(vals, counts):
     """
@@ -111,8 +151,15 @@ def two_list(vals, counts):
     Link(1, Link(1, Link(3, Link(3, Link(2)))))
     """
     "*** YOUR CODE HERE ***"
-
-
+    vals0=[]
+    for i in range(0,len(vals)):
+        times=counts[i]
+        for j in range(times):
+            vals0.append(vals[i])
+    ans=Link.empty
+    for i in vals0[::-1]:
+        ans=Link(i,ans)
+    return ans
 class Link:
     """A linked list.
 
